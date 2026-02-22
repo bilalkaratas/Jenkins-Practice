@@ -16,10 +16,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Set up test job
   test:
     timeout-minutes: 60
-    runs-on: ubuntu-latest  # Virtual Machine (macos-latest, windows-latest, ubuntu-latest etc.)
+    runs-on: ubuntu-latest # Virtual Machine (macos-latest, windows-latest, ubuntu-latest etc.)
     permissions:
       contents: write
 
@@ -38,19 +37,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Install Playwright Chromium Browser 
+      # Install Playwright Chromium Browser
       - name: Install Playwright Chrome
         run: npx playwright install --with-deps chromium
 
       # configuring environment variables Example:
       - name: Configure environment variables from secrets
         run: |
-          echo "Name=${{ secrets.NAME }}" >> .env
+          echo "PRACTICE_USERNAME=${{ secrets.PRACTICE_USERNAME }}" >> .env
+          echo "PRACTICE_PASSWORD=${{ secrets.PRACTICE_PASSWORD }}" >> .env
+          
 
-      # Running tests with Playwright 
+      # Running tests with Playwright
       - name: Run Playwright tests
-        run: npm run tests
+        run: npm run tests:headless
 
+      # Generating Playwright test results
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -58,7 +60,8 @@ jobs:
           name: test-results
           path: test-results/
           retention-days: 30
-
+      
+      # Generating Playwright HTML report
       - name: Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -66,12 +69,3 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-
-
-      # Deploying to GitHub Pages
-      - name: Deploy to GitHub Pages
-        if: always()
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./playwright-report
